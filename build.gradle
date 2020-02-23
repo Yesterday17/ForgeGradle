@@ -9,7 +9,7 @@ apply plugin: 'maven-publish'
 
 group = 'cn.yesterday17.forge'
 
-version = '1.2.1-SNAPSHOT'
+version = '1.2.0.2'
 
 archivesBaseName = 'ForgeGradle'
 targetCompatibility = '1.6'
@@ -175,16 +175,29 @@ publishing {
                         name = 'anatawa12'
                         roles = ['developer']
                     }
+
+                    developer {
+                        id = 'Yesterday17'
+                        name = 'Yesterday17'
+                        roles = ['developer']
+                    }
                 }
             }
         }
     }
     repositories {
         maven {
-            // change URLs to point to your repos, e.g. http://my.org/repo
-            def releasesRepoUrl = "$buildDir/repos/releases"
-            def snapshotsRepoUrl = "$buildDir/repos/snapshots"
-            url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/Yesterday17/ForgeGradle")
+            credentials {
+                username = project.findProperty("gpr.user") ?: System.getenv("USERNAME")
+                password = project.findProperty("gpr.key") ?: System.getenv("PASSWORD")
+            }
+        }
+    }
+    publications {
+        gpr(MavenPublication) {
+            from(components.java)
         }
     }
 }
