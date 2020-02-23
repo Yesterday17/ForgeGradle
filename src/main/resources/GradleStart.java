@@ -20,6 +20,7 @@ import java.math.BigInteger;
 import java.net.Proxy;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -76,21 +77,27 @@ public class GradleStart extends GradleStartCommon {
     }
 
     private static void hackNatives() {
-        String paths = System.getProperty("java.library.path");
         String nativesDir = "@@NATIVESDIR@@";
-
-        if (Strings.isNullOrEmpty(paths))
-            paths = nativesDir;
-        else
-            paths += File.pathSeparator + nativesDir;
-
-        System.setProperty("java.library.path", paths);
 
         // hack the classloader now.
         try {
-            final Field sysPathsField = ClassLoader.class.getDeclaredField("sys_paths");
-            sysPathsField.setAccessible(true);
-            sysPathsField.set(null, null);
+            final Field usrPathsField = ClassLoader.class.getDeclaredField("usr_paths");
+            usrPathsField.setAccessible(true);
+
+            //get array of paths
+            final String[] paths = (String[]) usrPathsField.get(null);
+
+            //check if the path to add is already present
+            for (String path : paths) {
+                if (path.equals(nativesDir)) {
+                    return;
+                }
+            }
+
+            //add the new path
+            final String[] newPaths = Arrays.copyOf(paths, paths.length + 1);
+            newPaths[newPaths.length - 1] = nativesDir;
+            usrPathsField.set(null, newPaths);
         } catch (Throwable t) {
         }
         ;
